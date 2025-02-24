@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <application
+        android:icon="@android:drawable/ic_menu_set_as"
+        android:label="決済アプリ一覧"
+        android:theme="@android:style/Theme.Material.Light.Dialog.NoActionBar">
+
+        <activity
+            android:name=".PaymentSelector"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="決済">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

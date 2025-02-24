@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace = 'me.s1204.payment.selector'
+    compileSdk = 35
+
+    defaultConfig {
+        minSdk = 28
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0.0"
+        proguardFiles += 'proguard-rules.pro'
+        multiDexEnabled = false
+    }
+
+    buildTypes {
+        configureEach.signingConfig = signingConfigs.debug
+        release {
+            minifyEnabled = true
+            shrinkResources = true
+        }
+    }
+
+    bundle {
+        density {
+            enableSplit = true
+        }
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+    
+    buildFeatures {
+        buildConfig = false
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    lintOptions {
+        abortOnError = false
+        ignore 'HardcodedText', 'QueryAllPackagesPermission'
+    }
+
+}
