@@ -38,11 +38,27 @@
         android:textAllCaps="false" />
 
     <Button
+        android:id="@+id/famipay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/famipay"
+        android:text="  ファミペイ"
+        android:textAllCaps="false" />
+
+    <Button
         android:id="@+id/v_point_pay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:drawableStart="@drawable/v_point_pay"
         android:text="VポイントPay"
+        android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/quick_ride"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/quick_ride"
+        android:text=" QUICK RIDE"
         android:textAllCaps="false" />
 
     <Button
@@ -58,7 +74,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:drawableStart="@drawable/neobank"
-        android:text=" NeoBank"
+        android:text=" 住信SBI"
         android:textAllCaps="false" />
 
     <Button

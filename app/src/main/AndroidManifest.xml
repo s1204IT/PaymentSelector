@@ -4,19 +4,49 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
+        android:appCategory="productivity"
         android:icon="@android:drawable/ic_menu_set_as"
         android:label="決済アプリ一覧"
+        android:manageSpaceActivity=".ClearActivity"
         android:theme="@android:style/Theme.Material.Light.Dialog.NoActionBar">
 
         <activity
             android:name=".PaymentSelector"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:label="決済">
+            android:label="決済"
+            android:launchMode="singleInstance"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="true"
+            android:icon="@android:drawable/ic_input_add"
+            android:label="アプリ一覧の設定"
+            android:launchMode="singleInstance">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.APPLICATION_PREFERENCES" />
+                <category android:name="android.intent.category.INFO" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ClearActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:icon="@android:drawable/ic_dialog_alert"
+            android:label="アプリ一覧のリセット"
+            android:launchMode="singleInstance">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.PREFERENCE" />
             </intent-filter>
         </activity>
 

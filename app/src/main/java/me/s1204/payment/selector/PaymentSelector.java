@@ -5,18 +5,39 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 public class PaymentSelector extends Activity {
+
+    private static final String DOUBLE_PRESS = "function_key_config_doublepress";
+    private static final String DOUBLE_PRESS_TYPE = DOUBLE_PRESS + "_type";
+    private static final String DOUBLE_PRESS_VALUE = DOUBLE_PRESS + "_value";
 
     /**
      * アプリ起動時の処理
      * @since v1.0.0
+     * @see #checkDoublePress()
      * @see #setPackage(int, String, String)
      * @author Syuugo
      * @noinspection SpellCheckingInspection*/
     private void refresh() {
+
+        // アプリ一覧にアプリが１つも無かったら設定アクティビティを立ち上げ終了
+        if (!checkItemCount()) {
+            startActivity(
+                    new Intent(Intent.ACTION_VIEW)
+                            .setClassName(getPackageName(), SettingsActivity.class.getName())
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            );
+            finish();
+            return;
+        }
+
+        // [2回押し]が有効でかつ選択されているかどうかの処理
+        checkDoublePress();
         // レイアウトを表示
         setContentView(R.layout.applist);
 
@@ -44,11 +65,23 @@ public class PaymentSelector extends Activity {
                 "com.nttdocomo.keitai.payment",
                 ".presentation.scenes.splash.view.SplashActivity"
         );
+        // ファミペイ
+        setPackage(
+                R.id.famipay,
+                "jp.co.family.familymart_app",
+                "jp.co.family.familymart.presentation.splash.SplashActivity"
+        );
         // VポイントPay
         setPackage(
                 R.id.v_point_pay,
                 "com.smbc_card.vpoint",
                 ".ui.splash.SplashActivity"
+        );
+        // QUICK RIDE
+        setPackage(
+                R.id.quick_ride,
+                "com.lecipapp",
+                ".SplashActivity"
         );
         // WESTER
         setPackage(
@@ -111,6 +144,63 @@ public class PaymentSelector extends Activity {
             // このアプリを終了
             finishAndRemoveTask();
         });
+    }
+
+    /**
+     * アプリ一覧にアプリが１つ以上選択されているか
+     * @since v1.1.0
+     * @see SettingsActivity#countSelectedItem()
+     * @author Syuugo
+     */
+    private boolean checkItemCount() {
+        return SettingsActivity.countSelectedItem() > 0;
+    }
+
+    /**
+     * Galaxy において、ダブルクリックが有効かどうかを確認
+     * @since v1.1.0
+     * @author Syuugo
+     */
+    private void checkDoublePress() {
+        if (
+                // Samsung 製の端末かどうか
+                Settings.System.getString(getContentResolver(), "preload_fingerprint").startsWith("samsung/")
+                // [2回押し]が有効かどうか
+                && (!checkInt(DOUBLE_PRESS, 1)
+                // [アプリを起動]が選択されているかどうか
+                || !checkInt(DOUBLE_PRESS_TYPE, 2)
+                // このアプリが対象に選ばれているかどうか
+                || !checkString(DOUBLE_PRESS_VALUE, getPackageName() + "/" + getClass().getName()))
+        ) {
+            // トーストメッセージを表示
+            Toast.makeText(this, "ダブルクリックの対象に選択されていません", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Global ネームスペースの整数型の値が一致するかどうかを返す
+     * @param name 変数名
+     * @param value 検証する値
+     * @since v1.1.0
+     * @author Syuugo
+     * @noinspection BooleanMethodIsAlwaysInverted*/
+    private boolean checkInt(String name, int value) {
+        try {
+            return Settings.Global.getInt(getContentResolver(), name) == value;
+        } catch (Settings.SettingNotFoundException ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Global ネームスペースの文字列型の値が一致するかどうかを返す
+     * @param name 変数名
+     * @param value 検証する値
+     * @since v1.1.0
+     * @author Syuugo
+     * @noinspection SameParameterValue*/
+    private boolean checkString(String name, String value) {
+        return Settings.Global.getString(getContentResolver(), name).equals(value);
     }
 
     /// @see #refresh()
