@@ -42,10 +42,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
-
-    lintOptions {
-        abortOnError = false
+    lint {
+        abortOnError false
+        //noinspection GrDeprecatedAPIUsage
         ignore 'HardcodedText', 'QueryAllPackagesPermission'
     }
+
 
 }
