@@ -1,28 +1,15 @@
 # Payment Selector
 
-特定の決済アプリを一覧表示するアプリ
+任意の決済アプリを一覧表示するアプリ
 
 ## 用途
 
-サイドボタンダブルクリック等でこのアプリを起動し、複数の決済アプリを素早く使い分ける
+端末のショートカット機能を活用し、複数の決済アプリを素早く使い分ける
 
 ## アプリ情報
 
 アプリ名：**決済アプリ一覧**  
 アクティビティ名：**決済**
-
-## 対応アプリ
-
-- [**Google ウォレット**](https://play.google.com/store/apps/details?id=com.google.android.apps.walletnfcrel&hl=ja)
-- [**PayPay**](https://play.google.com/store/apps/details?id=jp.ne.paypay.android.app&hl=ja)
-- [**楽天ペイ**](https://play.google.com/store/apps/details?id=jp.co.rakuten.pay&hl=ja)
-- [**d払い**](https://play.google.com/store/apps/details?id=com.nttdocomo.keitai.payment&hl=ja)
-- [**ファミペイ**](https://play.google.com/store/apps/details?id=jp.co.family.familymart_app&hl=ja)
-- [**VポイントPay**](https://play.google.com/store/apps/details?id=com.smbc_card.vpoint&hl=ja)
-- [**QUICK RIDE**](https://play.google.com/store/apps/details?id=com.lecipapp&hl=ja)
-- [**WESTER**](https://play.google.com/store/apps/details?id=jp.co.westjr.wester&hl=ja)
-- [**住信SBIネット銀行**](https://play.google.com/store/apps/details?id=jp.co.netbk&hl=ja)
-- [**みんなの銀行**](https://play.google.com/store/apps/details?id=com.MinnaNoGinko.bankapp&hl=ja)
 
 ## アプリ一覧の設定
 
