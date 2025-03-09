@@ -3,6 +3,7 @@ package me.s1204.payment.selector;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.widget.Toast;
 
 public class ClearActivity extends Activity {
 
@@ -28,8 +29,9 @@ public class ClearActivity extends Activity {
      * @author Syuugo
      */
     private void clearList() {
-        //TODO: リストをクリア
+        PaymentSelector.savePackageListToPrefs(this, new String[]{});
         finishAndRemoveTask();
+        Toast.makeText(this, "アプリ一覧をクリアしました", Toast.LENGTH_SHORT).show();
     }
 
     /// @see #checkUserAcception()

@@ -2,12 +2,16 @@ package me.s1204.payment.selector;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -15,52 +19,40 @@ import android.widget.Toast;
 
 public class PaymentSelector extends Activity {
 
-    // 決済アプリリスト
-    private static final String[] packageList = {
-            "com.google.android.apps.walletnfcrel", // Google ウォレット
-            "jp.ne.paypay.android.app", // PayPay
-            "jp.co.rakuten.pay", // 楽天ペイ
-            "com.nttdocomo.keitai.payment", // d払い
-            "jp.co.family.familymart_app", // ファミペイ
-            "com.smbc_card.vpoint", // VポイントPay
-            "com.lecipapp", // QUICK RIDE
-            "jp.co.westjr.wester", // WESTER
-            "jp.co.netbk", // 住信SBI
-            "com.MinnaNoGinko.bankapp" // みんなの銀行
-    };
-
-    private static final String DOUBLE_PRESS = "function_key_config_doublepress";
-    private static final String DOUBLE_PRESS_TYPE = DOUBLE_PRESS + "_type";
-    private static final String DOUBLE_PRESS_VALUE = DOUBLE_PRESS + "_value";
-    // LinearLayoutのインスタンス変数
+    protected static final String PREF_APP_LIST = "app_list";
+    private  String[] packageList = {};
     private LinearLayout appListLayout;
 
-    /**
-     * アプリ起動時の処理
-     *
-     * @since v1.0.0
-     * @see #setPackage(String)
-     * @author Syuugo
-     * @noinspection SpellCheckingInspection
-     */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.applist);
+
+        // LinearLayout を取得
+        appListLayout = findViewById(R.id.list);
+        // SharedPreferences からリストを読み込む
+        loadPackageListFromPrefs();
+        // refresh() を onCreate() の最後に呼び出す
+        refresh();
+    }
+
     private void refresh() {
+
 
         // アプリ一覧にアプリが１つも無かったら設定アクティビティを立ち上げ終了
         if (!checkItemCount()) {
+            Log.d("PaymentSelector", "No selected apps, starting SettingsActivity");
             startActivity(
-                new Intent(Intent.ACTION_VIEW)
-                        .setClassName(getPackageName(), SettingsActivity.class.getName())
-                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    new Intent(Intent.ACTION_VIEW)
+                            .setClassName(getPackageName(), SettingsActivity.class.getName())
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             );
             finish();
             return;
         }
 
-        // レイアウトを表示
-        setContentView(R.layout.applist);
-
-        // LinearLayout を取得
-        appListLayout = findViewById(R.id.list);
+        // 既存のボタンをすべて削除
+        appListLayout.removeAllViews();
 
         // 各パッケージに対してボタンを追加
         for (String packageName : packageList) {
@@ -68,13 +60,6 @@ public class PaymentSelector extends Activity {
         }
     }
 
-    /**
-     * 決済アプリを起動
-     *
-     * @param packageName 起動対象のパッケージ名
-     * @since v1.0.0
-     * @author Syuugo
-     */
     private void setPackage(final String packageName) {
         // パッケージマネージャーを取得
         PackageManager pm = getPackageManager();
@@ -185,19 +170,41 @@ public class PaymentSelector extends Activity {
      * リストに選択されているアプリの数の確認
      *
      * @return リストに選択されているアプリの合計数が１以上かどうか
-     * @since v1.1.0
-     * @see SettingsActivity#countSelectedItem()
-     * @author Syuugo
      */
     private boolean checkItemCount() {
-        return SettingsActivity.countSelectedItem() > 0;
+        return packageList != null && packageList.length > 0;
     }
 
-    /// @see #refresh()
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        refresh();
+
+    /**
+     * SharedPreferences からリストを読み込む
+     */
+    private void loadPackageListFromPrefs() {
+        SharedPreferences prefs = getSharedPreferences(PREF_APP_LIST, MODE_PRIVATE);
+        String packageListString = prefs.getString(PREF_APP_LIST, ""); // デフォルト値は空文字列
+
+        Log.d("PaymentSelector", "Loaded package list string: " + packageListString); //SharedPreferencesの内容確認用Log
+
+        if (!packageListString.isEmpty()) {
+            packageList = packageListString.split(","); // カンマ区切りで分割
+            Log.d("PaymentSelector", "Loaded package list: " + TextUtils.join(", ", packageList)); //分割後のリスト確認用Log
+        } else {
+            packageList = new String[]{}; // SharedPreferencesが空の場合は空のリストにする
+            Log.d("PaymentSelector", "Package list is empty");
+        }
+    }
+
+    /**
+     * SharedPreferences にリストを保存する
+     */
+    public static void savePackageListToPrefs(Context context, String[] list) {
+        SharedPreferences prefs = context.getSharedPreferences(PREF_APP_LIST, MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        // 配列をカンマ区切りの文字列に変換
+        String packageListString = TextUtils.join(",", list);
+        editor.putString(PREF_APP_LIST, packageListString);
+        editor.apply();
     }
 
     @Override
@@ -205,5 +212,4 @@ public class PaymentSelector extends Activity {
         super.onDestroy();
         finishAndRemoveTask();
     }
-
 }
