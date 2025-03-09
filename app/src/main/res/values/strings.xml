@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Payment Selector</string>
+    <string name="payment_selector">Pay</string>
+    <string name="settings_activity">Setting app list</string>
+    <string name="settings_activity_short">Setting</string>
+    <string name="clear_activity">Reset pay app list</string>
+</resources>

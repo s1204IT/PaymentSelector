@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@android:drawable/ic_input_add"
+        android:shortcutId="settings"
+        android:shortcutLongLabel="@string/settings_activity_short"
+        android:shortcutShortLabel="@string/settings_activity">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="me.s1204.payment.selector.SettingsActivity"
+            android:targetPackage="me.s1204.payment.selector" />
+
+    </shortcut>
+</shortcuts>

@@ -2,6 +2,7 @@ package me.s1204.payment.selector;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.widget.Toast;
 
 public class SettingsActivity extends Activity {
 
@@ -23,6 +24,7 @@ public class SettingsActivity extends Activity {
      */
     private void showAppList() {
         //TODO: AlertDialog で既存アプリをリスト化し、チェックボックスで選択後、閉じるボタンで finish()
+        Toast.makeText(this, SettingsActivity.class.getName(), Toast.LENGTH_SHORT).show();
         finishAndRemoveTask();
     }
 

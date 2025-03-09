@@ -6,7 +6,7 @@
     <application
         android:appCategory="productivity"
         android:icon="@android:drawable/ic_menu_set_as"
-        android:label="決済アプリ一覧"
+        android:label="@string/app_name"
         android:manageSpaceActivity=".ClearActivity"
         android:theme="@android:style/Theme.Material.Light.Dialog.NoActionBar">
 
@@ -14,7 +14,7 @@
             android:name=".PaymentSelector"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:label="決済"
+            android:label="@string/payment_selector"
             android:launchMode="singleInstance"
             android:noHistory="true">
             <intent-filter>
@@ -22,13 +22,16 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <activity
             android:name=".SettingsActivity"
             android:exported="true"
             android:icon="@android:drawable/ic_input_add"
-            android:label="アプリ一覧の設定"
+            android:label="@string/settings_activity"
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -42,7 +45,7 @@
             android:excludeFromRecents="true"
             android:exported="true"
             android:icon="@android:drawable/ic_dialog_alert"
-            android:label="アプリ一覧のリセット"
+            android:label="@string/clear_activity"
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
