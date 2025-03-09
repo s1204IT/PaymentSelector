@@ -2,7 +2,9 @@
 <resources>
     <string name="app_name">Payment Selector</string>
     <string name="payment_selector">Pay</string>
+    <string name="space" translatable="false"> %1$s</string>
+    <string name="cannot_launch">Cannot launch app.</string>
     <string name="settings_activity">Setting app list</string>
     <string name="settings_activity_short">Setting</string>
-    <string name="clear_activity">Reset pay app list</string>
+    <string name="clear_activity">Reset app list</string>
 </resources>

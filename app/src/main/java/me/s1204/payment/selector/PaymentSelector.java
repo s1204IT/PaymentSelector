@@ -3,204 +3,194 @@ package me.s1204.payment.selector;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.view.View;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 public class PaymentSelector extends Activity {
 
+    // 決済アプリリスト
+    private static final String[] packageList = {
+            "com.google.android.apps.walletnfcrel", // Google ウォレット
+            "jp.ne.paypay.android.app", // PayPay
+            "jp.co.rakuten.pay", // 楽天ペイ
+            "com.nttdocomo.keitai.payment", // d払い
+            "jp.co.family.familymart_app", // ファミペイ
+            "com.smbc_card.vpoint", // VポイントPay
+            "com.lecipapp", // QUICK RIDE
+            "jp.co.westjr.wester", // WESTER
+            "jp.co.netbk", // 住信SBI
+            "com.MinnaNoGinko.bankapp" // みんなの銀行
+    };
+
     private static final String DOUBLE_PRESS = "function_key_config_doublepress";
     private static final String DOUBLE_PRESS_TYPE = DOUBLE_PRESS + "_type";
     private static final String DOUBLE_PRESS_VALUE = DOUBLE_PRESS + "_value";
+    // LinearLayoutのインスタンス変数
+    private LinearLayout appListLayout;
 
     /**
      * アプリ起動時の処理
+     *
      * @since v1.0.0
-     * @see #checkDoublePress()
-     * @see #setPackage(int, String, String)
+     * @see #setPackage(String)
      * @author Syuugo
-     * @noinspection SpellCheckingInspection*/
+     * @noinspection SpellCheckingInspection
+     */
     private void refresh() {
 
         // アプリ一覧にアプリが１つも無かったら設定アクティビティを立ち上げ終了
         if (!checkItemCount()) {
             startActivity(
-                    new Intent(Intent.ACTION_VIEW)
-                            .setClassName(getPackageName(), SettingsActivity.class.getName())
-                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                new Intent(Intent.ACTION_VIEW)
+                        .setClassName(getPackageName(), SettingsActivity.class.getName())
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             );
             finish();
             return;
         }
 
-        // [2回押し]が有効でかつ選択されているかどうかの処理
-        checkDoublePress();
         // レイアウトを表示
         setContentView(R.layout.applist);
 
-        // Google ウォレット
-        setPackage(
-                R.id.google_pay,
-                "com.google.android.apps.walletnfcrel",
-                "com.google.commerce.tapandpay.android.wallet.WalletActivity"
-        );
-        // PayPay
-        setPackage(
-                R.id.paypay,
-                "jp.ne.paypay.android.app",
-                ".MainActivity"
-        );
-        // 楽天ペイ
-        setPackage(
-                R.id.rakuten_pay,
-                "jp.co.rakuten.pay",
-                "jp.co.rakuten.wallet.activities.StartActivity"
-        );
-        // d払い
-        setPackage(
-                R.id.d_pay,
-                "com.nttdocomo.keitai.payment",
-                ".presentation.scenes.splash.view.SplashActivity"
-        );
-        // ファミペイ
-        setPackage(
-                R.id.famipay,
-                "jp.co.family.familymart_app",
-                "jp.co.family.familymart.presentation.splash.SplashActivity"
-        );
-        // VポイントPay
-        setPackage(
-                R.id.v_point_pay,
-                "com.smbc_card.vpoint",
-                ".ui.splash.SplashActivity"
-        );
-        // QUICK RIDE
-        setPackage(
-                R.id.quick_ride,
-                "com.lecipapp",
-                ".SplashActivity"
-        );
-        // WESTER
-        setPackage(
-                R.id.wester,
-                "jp.co.westjr.wester",
-                ".presentation.splash.SplashActivity"
-        );
-        // 住信SBI
-        setPackage(
-                R.id.neobank,
-                "jp.co.netbk",
-                "jp.co.sbi_nbapp.SplashActivity"
-        );
-        // みんなの銀行
-        setPackage(
-                R.id.minna_no_ginko,
-                "com.MinnaNoGinko.bankapp",
-                ".MainActivity"
-        );
+        // LinearLayout を取得
+        appListLayout = findViewById(R.id.list);
+
+        // 各パッケージに対してボタンを追加
+        for (String packageName : packageList) {
+            setPackage(packageName);
+        }
     }
 
     /**
      * 決済アプリを起動
-     * @param resId ボタンのリソースID
+     *
      * @param packageName 起動対象のパッケージ名
-     * @param className 起動対象のクラス名
      * @since v1.0.0
      * @author Syuugo
-     * @noinspection ReassignedVariable*/
-    private void setPackage(final int resId, final String packageName, String className) {
-        // クラス名の先頭がパッケージ名と同じ場合は連結
-        if (className.startsWith(".")) className = packageName + className;
-        // ClickListener にクラス名の変数を定数として引き継ぐ
-        final String finalClassName = className;
-        // ボタンの定数を定義
-        final Button button = findViewById(resId);
-        // 対象のパッケージが存在するかを確認
+     */
+    private void setPackage(final String packageName) {
+        // パッケージマネージャーを取得
+        PackageManager pm = getPackageManager();
+        Button button;
+
         try {
-            // メタデータが取得可能か試みる
-            getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
+            // ApplicationInfo を取得
+            ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
+            // アプリ名を取得
+            String appName = appInfo.loadLabel(pm).toString();
+            // アプリアイコンを取得
+            Drawable appIcon = appInfo.loadIcon(pm);
+
+            // 画面密度を取得
+            DisplayMetrics metrics = getResources().getDisplayMetrics();
+            int densityDpi = metrics.densityDpi; // 密度 DPI
+
+            // 密度に基づいてアイコンサイズを調整
+            float iconSizeDp;
+            float fontSizeSp; // フォントサイズ
+            switch (densityDpi) {
+                case DisplayMetrics.DENSITY_LOW: // ldpi (120dpi)
+                    iconSizeDp = 24f;
+                    fontSizeSp = 12f;
+                    break;
+                case DisplayMetrics.DENSITY_MEDIUM: // mdpi (160dpi)
+                    iconSizeDp = 36f;
+                    fontSizeSp = 14f;
+                    break;
+                case DisplayMetrics.DENSITY_HIGH: // hdpi (240dpi)
+                    iconSizeDp = 48f;
+                    fontSizeSp = 16f;
+                    break;
+                case DisplayMetrics.DENSITY_XHIGH: // xhdpi (320dpi)
+                    iconSizeDp = 72f;
+                    fontSizeSp = 18f;
+                    break;
+                case DisplayMetrics.DENSITY_XXHIGH: // xxhdpi (480dpi)
+                    iconSizeDp = 96f;
+                    fontSizeSp = 20f;
+                    break;
+                case DisplayMetrics.DENSITY_XXXHIGH: // xxxhdpi (640dpi)
+                    iconSizeDp = 144f;
+                    fontSizeSp = 24f;
+                    break;
+                default:
+                    iconSizeDp = 48f;
+                    fontSizeSp = 16f;
+                    break;
+            }
+
+            // アイコンサイズを画面密度に応じて設定
+            int iconSizePx = (int) TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, iconSizeDp, getResources().getDisplayMetrics()
+            );
+            appIcon.setBounds(0, 0, iconSizePx, iconSizePx);
+
+            // ボタンを生成
+            button = new Button(this);
+
+            // アプリ名テキストを太字にする
+            button.setTypeface(null, android.graphics.Typeface.BOLD);
+            // フォントサイズを画面密度に応じて設定
+            button.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeSp);
+            // テキストを設定
+            button.setText(getString(R.string.space, appName));
+            // 大文字変換を無効化
+            button.setAllCaps(false);
+            // アイコンを設定
+            button.setCompoundDrawables(appIcon, null, null, null);
+            // タグに packageName を設定（後でIntent生成に使用）
+            button.setTag(packageName);
+            // ボタン用 LinearLayout を追加
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            // Button を追加するレイアウトを指定
+            button.setLayoutParams(layoutParams);
+            // レイアウトに Button を追加
+            appListLayout.addView(button);
         } catch (PackageManager.NameNotFoundException ignored) {
-            // パッケージが存在しない場合はボタンを非表示
-            button.setVisibility(View.GONE);
+            // パッケージが存在しない場合は何もせず、ボタンも追加しない
+            return;
         }
         // ボタンが押された時の処理
         button.setOnClickListener(v -> {
             try {
-                // アクティビティを起動
-                startActivity(
-                        // 既定のアクティビティ
-                        new Intent(Intent.ACTION_MAIN)
-                                // 指定されたパッケージ名とクラス名
-                                .setClassName(packageName, finalClassName)
-                                // このアプリが終了されても新しいタスクを維持
-                                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                );
+                // アクティビティを指定
+                Intent intent = pm.getLaunchIntentForPackage(packageName);
+                if (intent != null) {
+                    // アクティビティを起動
+                    startActivity(intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                } else {
+                    // アクティビティが起動できない時は何もしない(例外を発生させない)
+                    Toast.makeText(PaymentSelector.this, R.string.cannot_launch, Toast.LENGTH_SHORT).show();
+                }
             } catch (ActivityNotFoundException ignored) {
                 // 起動出来なかった時は何もしない
+            } finally {
+                // このアプリを終了
+                finishAndRemoveTask();
             }
-            // このアプリを終了
-            finishAndRemoveTask();
         });
     }
 
     /**
-     * アプリ一覧にアプリが１つ以上選択されているか
+     * リストに選択されているアプリの数の確認
+     *
+     * @return リストに選択されているアプリの合計数が１以上かどうか
      * @since v1.1.0
      * @see SettingsActivity#countSelectedItem()
      * @author Syuugo
      */
     private boolean checkItemCount() {
         return SettingsActivity.countSelectedItem() > 0;
-    }
-
-    /**
-     * Galaxy において、ダブルクリックが有効かどうかを確認
-     * @since v1.1.0
-     * @author Syuugo
-     */
-    private void checkDoublePress() {
-        if (
-                // Samsung 製の端末かどうか
-                Settings.System.getString(getContentResolver(), "preload_fingerprint").startsWith("samsung/")
-                // [2回押し]が有効かどうか
-                && (!checkInt(DOUBLE_PRESS, 1)
-                // [アプリを起動]が選択されているかどうか
-                || !checkInt(DOUBLE_PRESS_TYPE, 2)
-                // このアプリが対象に選ばれているかどうか
-                || !checkString(DOUBLE_PRESS_VALUE, getPackageName() + "/" + getClass().getName()))
-        ) {
-            // トーストメッセージを表示
-            Toast.makeText(this, "ダブルクリックの対象に選択されていません", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /**
-     * Global ネームスペースの整数型の値が一致するかどうかを返す
-     * @param name 変数名
-     * @param value 検証する値
-     * @since v1.1.0
-     * @author Syuugo
-     * @noinspection BooleanMethodIsAlwaysInverted*/
-    private boolean checkInt(String name, int value) {
-        try {
-            return Settings.Global.getInt(getContentResolver(), name) == value;
-        } catch (Settings.SettingNotFoundException ignored) {
-            return false;
-        }
-    }
-
-    /**
-     * Global ネームスペースの文字列型の値が一致するかどうかを返す
-     * @param name 変数名
-     * @param value 検証する値
-     * @since v1.1.0
-     * @author Syuugo
-     * @noinspection SameParameterValue*/
-    private boolean checkString(String name, String value) {
-        return Settings.Global.getString(getContentResolver(), name).equals(value);
     }
 
     /// @see #refresh()

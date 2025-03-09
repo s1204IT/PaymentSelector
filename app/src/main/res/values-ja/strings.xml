@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">決済アプリ一覧</string>
     <string name="payment_selector">決済</string>
+    <string name="cannot_launch">アプリを起動できません</string>
     <string name="settings_activity">アプリ一覧の設定</string>
     <string name="settings_activity_short">設定</string>
     <string name="clear_activity">アプリ一覧のリセット</string>
