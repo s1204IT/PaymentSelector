@@ -34,7 +34,7 @@ jobs:
 
       - name: Build
         run: |
-          ./gradlew --no-daemon --stacktrace --warning-mode=all assembleDebug
+          ./gradlew --no-daemon --warning-mode=all assembleDebug
           cp app/build/outputs/apk/debug/app-debug.apk ${{ env.repo }}-${{ env.version }}@${{ env.commit }}.apk
 
       - name: Upload

@@ -43,7 +43,7 @@ android {
         targetCompatibility JavaVersion.VERSION_21
     }
     lint {
-        abortOnError false
+        abortOnError = false
     }
 
 
