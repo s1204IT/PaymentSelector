@@ -4,13 +4,13 @@ plugins {
 
 android {
     namespace = 'me.s1204.payment.selector'
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 28
-        targetSdk = 35
+        targetSdk = compileSdk
         versionCode = 2
-        versionName = "1.1.0-rc1"
+        versionName = "1.1.0"
         proguardFiles += 'proguard-rules.pro'
         multiDexEnabled = false
     }
@@ -44,8 +44,6 @@ android {
     }
     lint {
         abortOnError false
-        //noinspection GrDeprecatedAPIUsage
-        ignore 'HardcodedText', 'QueryAllPackagesPermission'
     }
 
 

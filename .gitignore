@@ -15,3 +15,5 @@
 /.vscode/
 # nano temp save
 *.save
+# Claude Code
+/.claude/

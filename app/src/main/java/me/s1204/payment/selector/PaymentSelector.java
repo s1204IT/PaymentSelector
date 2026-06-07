@@ -11,11 +11,13 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PaymentSelector extends Activity {
 
@@ -28,20 +30,44 @@ public class PaymentSelector extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.applist);
 
-        // LinearLayout を取得
         appListLayout = findViewById(R.id.list);
-        // SharedPreferences からリストを読み込む
         loadPackageListFromPrefs();
-        // refresh() を onCreate() の最後に呼び出す
+        // アンインストール済みのアプリをリストから除去（残したままだとボタン生成時にクラッシュし得る）
+        removeUninstalledPackages();
+
         refresh();
     }
 
+    // 削除されたアプリを検知
+    private void removeUninstalledPackages() {
+        PackageManager pm = getPackageManager();
+        List<String> remaining = new ArrayList<>();
+        List<String> removed = new ArrayList<>();
+
+        for (String packageName : packageList) {
+            try {
+                pm.getApplicationInfo(packageName, 0);
+                remaining.add(packageName);
+            } catch (PackageManager.NameNotFoundException e) {
+                removed.add(packageName);
+            }
+        }
+
+        if (removed.isEmpty()) {
+            return;
+        }
+
+        packageList = remaining.toArray(new String[0]);
+        savePackageListToPrefs(this, packageList);
+
+        Toast.makeText(this,
+                getString(R.string.removed_uninstalled_apps, TextUtils.join("\n", removed)),
+                Toast.LENGTH_LONG).show();
+    }
+
     private void refresh() {
-
-
-        // アプリ一覧にアプリが１つも無かったら設定アクティビティを立ち上げ終了
-        if (!checkItemCount()) {
-            Log.d("PaymentSelector", "No selected apps, starting SettingsActivity");
+        // 選択されたアプリが1つも無い場合は設定画面を起動して終了
+        if (packageList.length == 0) {
             startActivity(
                     new Intent(Intent.ACTION_VIEW)
                             .setClassName(getPackageName(), SettingsActivity.class.getName())
@@ -51,10 +77,8 @@ public class PaymentSelector extends Activity {
             return;
         }
 
-        // 既存のボタンをすべて削除
+        // 既存のボタンを破棄し、選択されたアプリの順にボタンを並べ直す
         appListLayout.removeAllViews();
-
-        // 各パッケージに対してボタンを追加
         for (String packageName : packageList) {
             setPackage(packageName);
         }
@@ -166,37 +190,16 @@ public class PaymentSelector extends Activity {
         });
     }
 
-    /**
-     * リストに選択されているアプリの数の確認
-     *
-     * @return リストに選択されているアプリの合計数が１以上かどうか
-     */
-    private boolean checkItemCount() {
-        return packageList != null && packageList.length > 0;
-    }
-
-
-    /**
-     * SharedPreferences からリストを読み込む
-     */
+    // SharedPreferences からリストを読み込む
     private void loadPackageListFromPrefs() {
         SharedPreferences prefs = getSharedPreferences(PREF_APP_LIST, MODE_PRIVATE);
-        String packageListString = prefs.getString(PREF_APP_LIST, ""); // デフォルト値は空文字列
+        String packageListString = prefs.getString(PREF_APP_LIST, "");
 
-        Log.d("PaymentSelector", "Loaded package list string: " + packageListString); //SharedPreferencesの内容確認用Log
-
-        if (!packageListString.isEmpty()) {
-            packageList = packageListString.split(","); // カンマ区切りで分割
-            Log.d("PaymentSelector", "Loaded package list: " + TextUtils.join(", ", packageList)); //分割後のリスト確認用Log
-        } else {
-            packageList = new String[]{}; // SharedPreferencesが空の場合は空のリストにする
-            Log.d("PaymentSelector", "Package list is empty");
-        }
+        // カンマ区切りの文字列をパッケージ名の配列に変換する（未保存時は空文字列なので空配列にする）
+        packageList = packageListString.isEmpty() ? new String[]{} : packageListString.split(",");
     }
 
-    /**
-     * SharedPreferences にリストを保存する
-     */
+    // SharedPreferences にリストを保存する
     public static void savePackageListToPrefs(Context context, String[] list) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_APP_LIST, MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();

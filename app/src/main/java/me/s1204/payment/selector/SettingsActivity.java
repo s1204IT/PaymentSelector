@@ -1,6 +1,5 @@
 package me.s1204.payment.selector;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -9,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -26,8 +27,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public class SettingsActivity extends Activity {
 
@@ -36,32 +37,38 @@ public class SettingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings);
 
-        //TODO: 画面外でチェック状態解除＆順序変更
         showAppListDialog();
     }
 
     private void showAppListDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("アプリを選択");
+        builder.setTitle(R.string.select_apps_title);
 
-        // プログラムでListViewを作成
         ListView appListView = new ListView(this);
         final List<AppInfo> appInfoList = getInstalledAppInfoList(); // アプリ情報のリストを取得
         loadSelectedApps(this, appInfoList); // 選択状態をロード
-        AppListAdapter adapter = new AppListAdapter(this, appInfoList); // アダプターを作成
-        appListView.setAdapter(adapter); // ListViewにAdapterを設定
+        AppListAdapter adapter = new AppListAdapter(this, appInfoList);
+        appListView.setAdapter(adapter);
 
         builder.setView(appListView);
 
-        // OKボタンの設定
-        builder.setPositiveButton("保存", (dialog, which) -> {
-            saveSelectedApps(this, appInfoList);
+        builder.setPositiveButton(R.string.next, (dialog, which) -> {
+            List<AppInfo> selectedApps = new ArrayList<>();
+            for (AppInfo appInfo : appInfoList) {
+                if (appInfo.isChecked) {
+                    selectedApps.add(appInfo);
+                }
+            }
 
-            finish();
+            if (selectedApps.isEmpty()) {
+                clearSelectedApps(this);
+            } else {
+                // 選択したアプリの順序を設定する画面を表示
+                showAppOrderDialog(selectedApps);
+            }
         });
-
-        // キャンセルボタンの設定
-        builder.setNegativeButton("キャンセル", (dialog, which) -> {
+        
+        builder.setNegativeButton(R.string.cancel, (dialog, which) -> {
             dialog.cancel();
             finish();
         });
@@ -69,7 +76,6 @@ public class SettingsActivity extends Activity {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-
 
     // インストールされているアプリの情報を取得
     private List<AppInfo> getInstalledAppInfoList() {
@@ -91,68 +97,117 @@ public class SettingsActivity extends Activity {
         return appInfoList;
     }
 
-
     // SharedPreferences から以前に選択されたアプリを読み込む
     private void loadSelectedApps(Context context, List<AppInfo> appInfoList) {
         SharedPreferences prefs = context.getSharedPreferences(PaymentSelector.PREF_APP_LIST, MODE_PRIVATE);
         String selectedAppsString = prefs.getString(PaymentSelector.PREF_APP_LIST, "");
-        if (!selectedAppsString.isEmpty()) {
-            String[] selectedAppPackages = selectedAppsString.split(",");
-            for (AppInfo appInfo : appInfoList) {
-                appInfo.isChecked = false; // 初期化
-                for (String selectedPackage : selectedAppPackages) {
-                    //空白を除去し、大文字小文字を区別せずに比較
-                    if (appInfo.packageName.trim().equalsIgnoreCase(selectedPackage.trim())) {
-                        appInfo.isChecked = true;
-                        break;
-                    }
+        if (selectedAppsString.isEmpty()) {
+            return;
+        }
+
+        String[] selectedAppPackages = selectedAppsString.split(",");
+        for (AppInfo appInfo : appInfoList) {
+            for (String selectedPackage : selectedAppPackages) {
+                // 前後の空白を除去し、大文字小文字を区別せずに比較
+                if (appInfo.packageName.trim().equalsIgnoreCase(selectedPackage.trim())) {
+                    appInfo.isChecked = true;
+                    break;
                 }
             }
-        } else {
-            // SharedPreferencesに値がない場合、すべてのチェックを外す
-            for (AppInfo appInfo : appInfoList) {
-                appInfo.isChecked = false;
-            }
         }
     }
 
 
-    @SuppressLint("ApplySharedPref")
-    private void saveSelectedApps(Context context, List<AppInfo> appInfoList) {
-        List<String> selectedAppPackages = new ArrayList<>();
-        for (AppInfo appInfo : appInfoList) {
-            if (appInfo.isChecked) {
-                selectedAppPackages.add(appInfo.packageName);
-            }
-        }
-        String appListString = TextUtils.join(",", selectedAppPackages);
-
-        // SharedPreferencesに保存
+    // SharedPreferences をクリア
+    private void clearSelectedApps(Context context) {
         SharedPreferences prefs = getSharedPreferences(PaymentSelector.PREF_APP_LIST, MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
+        prefs.edit().clear().commit();
 
-        // チェックボックスが1つも選択されていない場合、SharedPreferencesをクリアする
-        if (selectedAppPackages.isEmpty()) {
-            editor.clear();
-            // PaymentSelector の packageList も空にする
-            PaymentSelector.savePackageListToPrefs(context, new String[]{});
-            Toast.makeText(this, "選択されたアプリはありません", Toast.LENGTH_SHORT).show();
+        // PaymentSelector の packageList も空にする
+        PaymentSelector.savePackageListToPrefs(context, new String[]{});
+        Toast.makeText(this, R.string.no_apps_selected, Toast.LENGTH_SHORT).show();
 
-        } else {
-            editor.putString(PaymentSelector.PREF_APP_LIST, appListString);
-            //PaymentSelectorのアクティビティを更新
-            PaymentSelector.savePackageListToPrefs(context, appListString.split(","));
-
-            // アプリを再起動
-
-            startActivity(Objects.requireNonNull(getBaseContext().getPackageManager().
-                            getLaunchIntentForPackage(getBaseContext().getPackageName()))
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-        }
-        editor.commit();
-        finish();// SharedPreferencesを保存後、SettingsActivityを閉じる
+        finish();
     }
 
+
+    // 並び替え後のアプリの順序を保存
+    private void savePackageOrder(Context context, List<AppInfo> orderedApps) {
+        List<String> orderedPackages = new ArrayList<>();
+        for (AppInfo appInfo : orderedApps) {
+            orderedPackages.add(appInfo.packageName);
+        }
+        String appListString = TextUtils.join(",", orderedPackages);
+
+        // SharedPreferences に保存
+        SharedPreferences prefs = getSharedPreferences(PaymentSelector.PREF_APP_LIST, MODE_PRIVATE);
+        prefs.edit().putString(PaymentSelector.PREF_APP_LIST, appListString).commit();
+
+        // アクティビティを更新
+        PaymentSelector.savePackageListToPrefs(context, orderedPackages.toArray(new String[0]));
+
+        finish();
+    }
+
+    // 選択したアプリの並び順を編集するダイアログを表示
+    private void showAppOrderDialog(List<AppInfo> selectedApps) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.app_order_title);
+
+        // プログラムでListViewを作成
+        ListView appOrderListView = new ListView(this);
+        AppOrderAdapter adapter = new AppOrderAdapter(this, selectedApps);
+        appOrderListView.setAdapter(adapter);
+
+        builder.setView(appOrderListView);
+
+        // 保存ボタンの設定
+        builder.setPositiveButton(R.string.save, (dialog, which) -> savePackageOrder(this, selectedApps));
+
+        // キャンセルボタンの設定
+        builder.setNegativeButton(R.string.cancel, (dialog, which) -> {
+            dialog.cancel();
+            finish();
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    // 画面密度に応じたアプリアイコンの表示サイズ(px)を計算
+    private static int computeIconSizePx(Context context) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+
+        // 密度に基づいてアイコンサイズを調整
+        float iconSizeDp;
+
+        //noinspection EnhancedSwitchMigration
+        switch (metrics.densityDpi) {
+            case DisplayMetrics.DENSITY_LOW:      // ldpi (120dpi)
+                iconSizeDp = 24f;
+                break;
+            case DisplayMetrics.DENSITY_MEDIUM:   // mdpi (160dpi)
+                iconSizeDp = 36f;
+                break;
+            case DisplayMetrics.DENSITY_HIGH:     // hdpi (240dpi)
+                iconSizeDp = 48f;
+                break;
+            case DisplayMetrics.DENSITY_XHIGH:    // xhdpi (320dpi)
+                iconSizeDp = 72f;
+                break;
+            case DisplayMetrics.DENSITY_XXHIGH:   // xxhdpi (480dpi)
+                iconSizeDp = 96f;
+                break;
+            case DisplayMetrics.DENSITY_XXXHIGH:  // xxxhdpi (640dpi)
+                iconSizeDp = 144f;
+                break;
+            default:
+                iconSizeDp = 48f;
+                break;
+        }
+
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, iconSizeDp, metrics);
+    }
 
     static class AppInfo {
         String appName;
@@ -167,19 +222,13 @@ public class SettingsActivity extends Activity {
     }
 
     static class AppListAdapter extends ArrayAdapter<AppInfo> {
-        /** @noinspection FieldCanBeLocal, unused , FieldMayBeFinal */
-        private LayoutInflater inflater;
-        /** @noinspection FieldMayBeFinal*/
-        private List<AppInfo> mAppList; // AppInfoのリストを保持
+        private final List<AppInfo> mAppList; // AppInfo のリストを保持
 
         public AppListAdapter(Context context, List<AppInfo> appList) {
-            super(context, 0, appList); // XMLレイアウトを使わないのでresourceIdは0でOK
-            inflater = LayoutInflater.from(context);
+            super(context, 0, appList);
             mAppList = appList;
         }
 
-
-        /** @noinspection NullableProblems*/
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             ViewHolder holder;
@@ -195,7 +244,7 @@ public class SettingsActivity extends Activity {
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT);
                 appIconView.setLayoutParams(iconParams);
-                // ScaleTypeを設定
+                // ScaleType を設定
                 appIconView.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 appIconView.setId(View.generateViewId());
                 itemLayout.addView(appIconView);
@@ -206,13 +255,13 @@ public class SettingsActivity extends Activity {
                         0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
                 appNameTextView.setLayoutParams(textViewParams);
                 appNameTextView.setTextSize(16);
-                appNameTextView.setTypeface(null, android.graphics.Typeface.BOLD); // 太字にする
-                appNameTextView.setId(View.generateViewId()); // IDを生成
+                appNameTextView.setTypeface(null, Typeface.BOLD);
+                appNameTextView.setId(View.generateViewId());
                 itemLayout.addView(appNameTextView);
 
                 CheckBox checkBox = new CheckBox(getContext());
                 itemLayout.addView(checkBox);
-                checkBox.setId(View.generateViewId()); // IDを生成
+                checkBox.setId(View.generateViewId());
 
                 convertView = itemLayout;
 
@@ -223,21 +272,16 @@ public class SettingsActivity extends Activity {
 
                 convertView.setTag(holder);
 
-                //convertView が null の場合にのみ、setOnCheckedChangeListener() メソッドを呼び出す
-                holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                    AppInfo appInfo = mAppList.get(position);
-                    appInfo.isChecked = isChecked;
-
-                });
-
-
             } else {
                 holder = (ViewHolder) convertView.getTag();
             }
 
             AppInfo appInfo = mAppList.get(position);
             holder.appNameTextView.setText(appInfo.appName);
+            holder.checkBox.setOnCheckedChangeListener(null);
             holder.checkBox.setChecked(appInfo.isChecked);
+            holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> appInfo.isChecked = isChecked);
+
             PackageManager pm = getContext().getPackageManager();
             Drawable appIcon;
             try {
@@ -247,43 +291,8 @@ public class SettingsActivity extends Activity {
                 throw new RuntimeException(e);
             }
 
-            // 画面密度を取得
-            DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
-            int densityDpi = metrics.densityDpi; // 密度 DPI (例: 160, 240, 320, 480)
-
-            // 密度に基づいてアイコンサイズを調整
-            float iconSizeDp;
-
-            //noinspection EnhancedSwitchMigration
-            switch (densityDpi) {
-                case DisplayMetrics.DENSITY_LOW:      // ldpi (120dpi)
-                    iconSizeDp = 24f;
-                    break;
-                case DisplayMetrics.DENSITY_MEDIUM:   // mdpi (160dpi)
-                    iconSizeDp = 36f;
-                    break;
-                case DisplayMetrics.DENSITY_HIGH:     // hdpi (240dpi)
-                    iconSizeDp = 48f;
-                    break;
-                case DisplayMetrics.DENSITY_XHIGH:    // xhdpi (320dpi)
-                    iconSizeDp = 72f;
-                    break;
-                case DisplayMetrics.DENSITY_XXHIGH:   // xxhdpi (480dpi)
-                    iconSizeDp = 96f;
-                    break;
-                case DisplayMetrics.DENSITY_XXXHIGH:  // xxxhdpi (640dpi)
-                    iconSizeDp = 144f;
-                    break;
-                default:
-                    iconSizeDp = 48f;
-                    break;
-            }
-
-            int iconSizePx = (int) TypedValue.applyDimension(
-                    TypedValue.COMPLEX_UNIT_DIP, iconSizeDp, getContext().getResources().getDisplayMetrics());
-            // appIcon.setBounds(0, 0, iconSizePx, iconSizePx);
-
-            //アイコンサイズ指定
+            // アイコンサイズ指定
+            int iconSizePx = computeIconSizePx(getContext());
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(iconSizePx, iconSizePx);
             holder.appIconView.setLayoutParams(layoutParams);
             holder.appIconView.setImageDrawable(appIcon);
@@ -295,6 +304,84 @@ public class SettingsActivity extends Activity {
             ImageView appIconView;
             TextView appNameTextView;
             CheckBox checkBox;
+        }
+    }
+
+
+    static class AppOrderAdapter extends ArrayAdapter<AppInfo> {
+        private final LayoutInflater inflater;
+        private final List<AppInfo> mAppList; // AppInfo のリスト
+
+        public AppOrderAdapter(Context context, List<AppInfo> appList) {
+            super(context, 0, appList);
+            inflater = LayoutInflater.from(context);
+            mAppList = appList;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder;
+
+            if (convertView == null) {
+                convertView = inflater.inflate(R.layout.sequence, parent, false);
+
+                holder = new ViewHolder();
+                holder.appIconView = convertView.findViewById(R.id.app_icon);
+                holder.appNameTextView = convertView.findViewById(R.id.app_name);
+                holder.upButton = convertView.findViewById(R.id.up_button);
+                holder.downButton = convertView.findViewById(R.id.down_button);
+
+                convertView.setTag(holder);
+
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+
+            AppInfo appInfo = mAppList.get(position);
+            holder.appNameTextView.setText(appInfo.appName);
+
+            PackageManager pm = getContext().getPackageManager();
+            Drawable appIcon = null;
+            try {
+                ApplicationInfo applicationInfo = pm.getApplicationInfo(appInfo.packageName, 0);
+                appIcon = applicationInfo.loadIcon(pm);
+            } catch (PackageManager.NameNotFoundException ignored) {
+            }
+
+            int iconSizePx = computeIconSizePx(getContext());
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(iconSizePx, iconSizePx);
+            holder.appIconView.setLayoutParams(layoutParams);
+            holder.appIconView.setImageDrawable(appIcon);
+
+            // 上下ボタンの表示状態を現在のリスト内の位置に応じて切り替え
+            int currentPosition = mAppList.indexOf(appInfo);
+            holder.upButton.setEnabled(currentPosition > 0);
+            holder.downButton.setEnabled(currentPosition < mAppList.size() - 1);
+
+            // 入れ替え
+            holder.upButton.setOnClickListener(v -> {
+                int pos = mAppList.indexOf(appInfo);
+                if (pos > 0) {
+                    Collections.swap(mAppList, pos, pos - 1);
+                    notifyDataSetChanged();
+                }
+            });
+            holder.downButton.setOnClickListener(v -> {
+                int pos = mAppList.indexOf(appInfo);
+                if (pos < mAppList.size() - 1) {
+                    Collections.swap(mAppList, pos, pos + 1);
+                    notifyDataSetChanged();
+                }
+            });
+
+            return convertView;
+        }
+
+        static class ViewHolder {
+            ImageView appIconView;
+            TextView appNameTextView;
+            ImageButton upButton;
+            ImageButton downButton;
         }
     }
 
