@@ -4,13 +4,13 @@ plugins {
 
 android {
     namespace = 'me.s1204.payment.selector'
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 28
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        targetSdk = compileSdk
+        versionCode = 2
+        versionName = "1.1.0"
         proguardFiles += 'proguard-rules.pro'
         multiDexEnabled = false
     }
@@ -42,10 +42,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
-
-    lintOptions {
+    lint {
         abortOnError = false
-        ignore 'HardcodedText', 'QueryAllPackagesPermission'
     }
+
 
 }

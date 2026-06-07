@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">決済アプリ一覧</string>
+    <string name="payment_selector">決済</string>
+    <string name="cannot_launch">アプリを起動できません</string>
+    <string name="settings_activity">アプリ一覧の設定</string>
+    <string name="settings_activity_short">設定</string>
+    <string name="clear_activity">アプリ一覧のリセット</string>
+    <string name="select_apps_title">アプリを選択</string>
+    <string name="app_order_title">アプリの順序を設定</string>>
+    <string name="next">次へ</string>
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="no_apps_selected">選択されたアプリはありません</string>
+    <string name="clear_list_confirm_message">設定したアプリ一覧をリセットしますか？</string>
+    <string name="app_list_cleared">アプリ一覧をクリアしました</string>
+    <string name="removed_uninstalled_apps">アンインストールされたアプリをリストから解除しました:\n%1$s</string>
+</resources>

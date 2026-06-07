@@ -4,7 +4,7 @@ pluginManagement {
         mavenCentral()
     }
     plugins {
-        id 'com.android.application' version '8.8.1' apply false
+        id 'com.android.application' version '9.2.1' apply false
     }
 }
 dependencyResolutionManagement {
@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = 'PaymentSelector'
+rootProject.name = 'Payment Selector'
 include 'app'
